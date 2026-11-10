@@ -47,6 +47,7 @@ for(const o of obstacles){if(player.x+player.w-7>o.x+7&&player.x+7<o.x+o.w-7&&pl
 stars=stars.filter(s=>{let hit=player.x<s.x+13&&player.x+player.w>s.x-13&&player.y<s.y+13&&player.y+player.h>s.y-13;if(hit)score+=5;return !hit});
 }
 function loop(){update();draw();requestAnimationFrame(loop)}
+reset();
 startBtn.addEventListener('click',begin);canvas.addEventListener('pointerdown',jump);window.addEventListener('keydown',e=>{if(['Space','ArrowUp','KeyW'].includes(e.code)){e.preventDefault();if(!running&&dead)begin();else jump()}});loop();
 })();
 </script>
