@@ -1,9 +1,9 @@
 <!doctype html>
 <html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Neon Dash</title>
 <style>
-*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;background:#0b1028;color:white;font-family:Arial,sans-serif;padding:12px}.wrap{width:min(900px,100%)}header{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}h1{color:#5cf5ff;text-shadow:0 0 15px #00dfff}.stats{display:flex;gap:14px;align-items:center}button{border:0;border-radius:10px;padding:12px 18px;font-weight:bold;background:linear-gradient(90deg,#5cf5ff,#ff62d6);cursor:pointer}#sound{padding:8px 12px}#stage{position:relative;border:2px solid #5966bd;border-radius:14px;overflow:hidden}canvas{display:block;width:100%;height:auto;touch-action:manipulation}.cover{position:absolute;inset:0;display:grid;place-items:center;text-align:center;background:#080d25cc;padding:20px}.cover h2{font-size:clamp(28px,6vw,48px);color:#5cf5ff;margin:0 0 8px}.cover p{line-height:1.5}.hint{text-align:center;color:#b8c5ff;font-size:14px}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;background:#0b1028;color:white;font-family:Arial,sans-serif;padding:12px}.wrap{width:min(900px,100%)}header{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}h1{color:#5cf5ff;text-shadow:0 0 15px #00dfff}.stats{display:flex;gap:14px;align-items:center}button{position:relative;z-index:10;pointer-events:auto;border:0;border-radius:10px;padding:12px 18px;font-weight:bold;background:linear-gradient(90deg,#5cf5ff,#ff62d6);cursor:pointer;touch-action:manipulation}#sound{padding:8px 12px}#stage{position:relative;border:2px solid #5966bd;border-radius:14px;overflow:hidden}canvas{display:block;width:100%;height:auto;touch-action:manipulation}.cover{position:absolute;inset:0;z-index:5;pointer-events:auto;display:grid;place-items:center;text-align:center;background:#080d25cc;padding:20px}.cover h2{font-size:clamp(28px,6vw,48px);color:#5cf5ff;margin:0 0 8px}.cover p{line-height:1.5}.hint{text-align:center;color:#b8c5ff;font-size:14px}
 </style></head><body><main class="wrap"><header><h1>NEON DASH</h1><div class="stats"><span>⭐ <b id="score">0</b></span><span>BEST <b id="best">0</b></span><span>LEVEL <b id="level">1</b></span><button id="sound">🔊 SOUND</button></div></header>
-<div id="stage"><canvas id="game" width="900" height="420"></canvas><div class="cover" id="cover"><div><h2 id="title">READY?</h2><p id="message">Springe über die pinken Spikes und lande auf Plattformen.<br>Leertaste, Pfeil hoch oder auf den Bildschirm tippen.</p><button id="start">SPIEL STARTEN</button></div></div></div><p class="hint">Springen: LEERTASTE / ↑ / W oder Bildschirm antippen</p></main>
+<div id="stage"><canvas id="game" width="900" height="420"></canvas><div class="cover" id="cover"><div><h2 id="title">READY?</h2><p id="message">Springe über die pinken Spikes und lande auf Plattformen.<br>Leertaste, Pfeil hoch oder auf den Bildschirm tippen.</p><button id="start" type="button">SPIEL STARTEN</button></div></div></div><p class="hint">Springen: LEERTASTE / ↑ / W oder Bildschirm antippen</p></main>
 <script>
 (()=>{'use strict';
 const canvas=document.getElementById('game'),ctx=canvas.getContext('2d');
@@ -34,7 +34,12 @@ spikes=spikes.filter(o=>o.x+34>0);platforms=platforms.filter(p=>p.x+p.w>0);coins
 for(const o of spikes){if(player.x+player.w-5>o.x+7&&player.x+5<o.x+27&&player.y+player.h>FLOOR-o.h+9){finish();break}}
 coins=coins.filter(c=>{let hit=Math.abs((player.x+17)-c.x)<24&&Math.abs((player.y+17)-c.y)<24;if(hit){score+=5;beep(900,.08)}return !hit});$('score').textContent=Math.floor(score)}
 function loop(){try{update();draw()}catch(e){active=false;$('title').textContent='SPIELFEHLER';$('message').textContent='Bitte Seite neu laden.';$('cover').style.display='grid'}requestAnimationFrame(loop)}
-$('start').addEventListener('click',start);$('sound').addEventListener('click',()=>{sound=!sound;$('sound').textContent=sound?'🔊 SOUND':'🔇 SOUND';if(sound)beep()});
+const startGame=e=>{if(e)e.preventDefault();start()};
+$('start').addEventListener('click',startGame);
+$('start').addEventListener('pointerup',startGame);
+$('start').addEventListener('touchend',startGame,{passive:false});
+$('cover').addEventListener('click',e=>{if(e.target===$('cover')||e.target.closest('#start'))startGame(e)});
+$('sound').addEventListener('click',()=>{sound=!sound;$('sound').textContent=sound?'🔊 SOUND':'🔇 SOUND';if(sound)beep()});
 canvas.addEventListener('pointerdown',jump);window.addEventListener('keydown',e=>{if(['Space','ArrowUp','KeyW'].includes(e.code)){e.preventDefault();if(over)start();else jump()}});
 reset();loop();
 })();
