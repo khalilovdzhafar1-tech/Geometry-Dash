@@ -1,52 +1,40 @@
 <!doctype html>
-<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Neon Dash</title>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><title>NEON PARKOUR</title>
 <style>
-*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;background:#0b1028;color:white;font-family:Arial,sans-serif;padding:12px}.wrap{width:min(900px,100%)}header{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}h1{color:#5cf5ff;text-shadow:0 0 15px #00dfff}.stats{display:flex;gap:14px;align-items:center}button{position:relative;z-index:10;pointer-events:auto;border:0;border-radius:10px;padding:12px 18px;font-weight:bold;background:linear-gradient(90deg,#5cf5ff,#ff62d6);cursor:pointer;touch-action:manipulation}#sound{padding:8px 12px}#fullscreen{padding:8px 12px;background:linear-gradient(90deg,#a45bff,#5cf5ff)}#stage:fullscreen{width:100vw;height:100vh;border:0;border-radius:0;background:#10152e;display:grid;place-items:center}#stage:fullscreen canvas{width:100%;height:100%;object-fit:contain}#stage:fullscreen .cover{border-radius:0}body:has(#stage:fullscreen){padding:0;display:block}body:has(#stage:fullscreen) .wrap{width:100vw}body:has(#stage:fullscreen) header,body:has(#stage:fullscreen) .hint{display:none}#stage{position:relative;border:2px solid #5966bd;border-radius:14px;overflow:hidden}canvas{display:block;width:100%;height:auto;touch-action:manipulation}.cover{position:absolute;inset:0;z-index:5;pointer-events:auto;display:grid;place-items:center;text-align:center;background:#080d25cc;padding:20px}.cover h2{font-size:clamp(28px,6vw,48px);color:#5cf5ff;margin:0 0 8px}.cover p{line-height:1.5}.hint{text-align:center;color:#b8c5ff;font-size:14px}
-</style></head><body><main class="wrap"><header><h1>NEON DASH</h1><div class="stats"><span>⭐ <b id="score">0</b></span><span>BEST <b id="best">0</b></span><span>LEVEL <b id="level">1</b></span><button id="sound">🔊 SOUND</button><button id="fullscreen" type="button">⛶ VOLLBILD</button></div></header>
-<div id="stage"><canvas id="game" width="900" height="420"></canvas><div class="cover" id="cover"><div><h2 id="title">READY?</h2><p id="message">Springe über Spikes und Blöcke, sammle Sterne und lande auf Plattformen.<br>Leertaste, Pfeil hoch oder auf den Bildschirm tippen.</p><button id="start" type="button">SPIEL STARTEN</button></div></div></div><p class="hint">Springen: LEERTASTE / ↑ / W oder Bildschirm antippen</p></main>
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:#090e20;color:#fff;font-family:Arial,sans-serif;padding:12px;display:grid;place-items:center}.wrap{width:min(960px,100%)}header{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}h1{color:#65f6ff;text-shadow:0 0 16px #00dfff;margin:8px 0}.stats{display:flex;gap:12px;align-items:center;flex-wrap:wrap}button{border:0;border-radius:11px;padding:11px 16px;font-weight:bold;background:linear-gradient(90deg,#55edff,#ff65d4);color:#081020;touch-action:manipulation;cursor:pointer}#stage{position:relative;border:2px solid #5668c9;border-radius:14px;overflow:hidden;background:#111a38}canvas{display:block;width:100%;height:auto;touch-action:none}.cover{position:absolute;inset:0;z-index:4;display:grid;place-items:center;text-align:center;background:#080d25dd;padding:20px}.cover h2{font-size:clamp(30px,6vw,52px);color:#60f4ff;margin:0 0 8px}.cover p{line-height:1.5}.hint{text-align:center;color:#b8c5ff;font-size:14px}.controls{display:flex;justify-content:center;gap:14px;margin:12px auto 0}.controls button{min-width:74px;font-size:20px;background:#283765;color:white;border:1px solid #7186e9}.controls .jump{background:linear-gradient(90deg,#55edff,#ff65d4);color:#081020;min-width:130px}#stage:fullscreen{width:100vw;height:100vh;border:0;border-radius:0;display:grid;place-items:center}#stage:fullscreen canvas{width:100%;height:100%;object-fit:contain}body:has(#stage:fullscreen){padding:0;display:block}body:has(#stage:fullscreen) .wrap{width:100vw}body:has(#stage:fullscreen) header,body:has(#stage:fullscreen) .hint,body:has(#stage:fullscreen) .controls{display:none}
+</style></head><body><main class="wrap"><header><h1>NEON PARKOUR</h1><div class="stats"><span>⭐ <b id="score">0</b></span><span>BEST <b id="best">0</b></span><button id="full">⛶ VOLLBILD</button></div></header>
+<div id="stage"><canvas id="game" width="960" height="480"></canvas><div class="cover" id="cover"><div><h2 id="title">NEON PARKOUR</h2><p id="message">Renne über Dächer, springe über Abgründe und sammle Sterne!<br>Steuerung: A/D oder ←/→ zum Laufen, SPACE oder ↑ zum Springen.</p><button id="start">PARKOUR STARTEN</button></div></div></div>
+<div class="controls"><button id="left">◀</button><button class="jump" id="jump">SPRINGEN ⬆</button><button id="right">▶</button></div><p class="hint">PC: A/D oder ←/→ laufen · SPACE / ↑ springen · Handy: Tasten benutzen</p></main>
 <script>
 (()=>{'use strict';
-const canvas=document.getElementById('game'),ctx=canvas.getContext('2d');
-const $=id=>document.getElementById(id),W=900,H=420,FLOOR=350;
-let active=false,over=false,tick=0,score=0,best=0,level=1,speed=5,player,spikes=[],platforms=[],coins=[],blocks=[],sound=true,audio;
-try{best=Number(localStorage.getItem('nd-best')||0)}catch(e){} $('best').textContent=best;
-function beep(f=500,d=.1,w='sine'){if(!sound)return;try{audio=audio||new(window.AudioContext||window.webkitAudioContext)();if(audio.state==='suspended')audio.resume();let o=audio.createOscillator(),g=audio.createGain();o.type=w;o.frequency.value=f;g.gain.setValueAtTime(.05,audio.currentTime);g.gain.exponentialRampToValueAtTime(.001,audio.currentTime+d);o.connect(g);g.connect(audio.destination);o.start();o.stop(audio.currentTime+d)}catch(e){}}
-function reset(){tick=0;score=0;level=1;speed=5;player={x:120,y:FLOOR-34,w:34,h:34,vy:0,grounded:true};spikes=[];platforms=[];coins=[];blocks=[];$('score').textContent='0';$('level').textContent='1'}
-function start(){reset();active=true;over=false;$('cover').style.display='none'}
-function jump(){if(!active){if(!over)start();return}if(player.grounded){player.vy=-13;player.grounded=false;beep(420,.08,'square')}}
-function finish(){active=false;over=true;beep(130,.25,'sawtooth');best=Math.max(best,Math.floor(score));try{localStorage.setItem('nd-best',best)}catch(e){}$('best').textContent=best;$('title').textContent='CRASH!';$('message').textContent='Punkte: '+Math.floor(score)+' – versuch es nochmal!';$('start').textContent='NOCHMAL SPIELEN';$('cover').style.display='grid'}
-function draw(){ctx.clearRect(0,0,W,H);let g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#1a2252');g.addColorStop(1,'#10152e');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
-ctx.strokeStyle='#303b70';ctx.lineWidth=1;for(let x=0;x<W;x+=45){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke()}
-ctx.fillStyle='#25315d';ctx.fillRect(0,FLOOR,W,H-FLOOR);ctx.fillStyle='#55f5ff';ctx.fillRect(0,FLOOR,W,3);
-blocks.forEach(b=>{ctx.save();ctx.shadowBlur=14;ctx.shadowColor='#ff9d42';ctx.fillStyle='#ff9d42';ctx.fillRect(b.x,FLOOR-b.h,b.w,b.h);ctx.strokeStyle='#fff0c2';ctx.lineWidth=3;ctx.strokeRect(b.x+2,FLOOR-b.h+2,b.w-4,b.h-4);ctx.restore()});
-platforms.forEach(p=>{ctx.fillStyle='#a45bff';ctx.fillRect(p.x,p.y,p.w,12);ctx.fillStyle='#e5c8ff';ctx.fillRect(p.x,p.y,p.w,3)});
-spikes.forEach(o=>{ctx.fillStyle='#ff4d9d';ctx.beginPath();ctx.moveTo(o.x,FLOOR);ctx.lineTo(o.x+17,FLOOR-o.h);ctx.lineTo(o.x+34,FLOOR);ctx.fill()});
-coins.forEach(c=>{ctx.fillStyle='#ffe66d';ctx.beginPath();ctx.arc(c.x,c.y,9,0,Math.PI*2);ctx.fill()});
-ctx.fillStyle='#ffffff33';ctx.fillRect(20,18,220,7);ctx.fillStyle='#5cf5ff';ctx.fillRect(20,18,220*((score%200)/200),7);ctx.fillStyle='white';ctx.font='12px Arial';ctx.fillText('LEVEL '+level+' • '+Math.floor((score%200)/2)+'%',20,39);
-if(player){ctx.save();ctx.translate(player.x+player.w/2,player.y+player.h/2);if(!player.grounded)ctx.rotate(tick*.09);ctx.translate(-player.w/2,-player.h/2);ctx.shadowBlur=22;ctx.shadowColor='#00eaff';ctx.fillStyle='#55edff';ctx.fillRect(0,0,player.w,player.h);ctx.shadowBlur=0;ctx.strokeStyle='white';ctx.lineWidth=3;ctx.strokeRect(4,4,player.w-8,player.h-8);ctx.restore()}}
-function update(){if(!active)return;tick++;score+=.12;speed+=.0005;let nl=1+Math.floor(score/200);if(nl!==level){level=nl;$('level').textContent=level;beep(800,.16)}
-let prev=player.y+player.h;player.vy+=.6;player.y+=player.vy;player.grounded=false;
-for(const p of platforms){if(player.vy>=0&&prev<=p.y&&player.y+player.h>=p.y&&player.x+player.w>p.x&&player.x<p.x+p.w){player.y=p.y-player.h;player.vy=0;player.grounded=true}}
-if(player.y+player.h>=FLOOR){player.y=FLOOR-player.h;player.vy=0;player.grounded=true}
-if(tick%75===0){let n=1+(Math.random()<.45?1:0)+(level>3&&Math.random()<.25?1:0);for(let i=0;i<n;i++)spikes.push({x:W+20+i*33,h:30+Math.random()*24})}
-if(tick%210===0)blocks.push({x:W+15,w:30+Math.random()*22,h:35+Math.random()*35});
-if(tick%165===0)platforms.push({x:W+10,y:FLOOR-105-Math.random()*30,w:145});
-if(tick%100===0)coins.push({x:W+10,y:FLOOR-80-Math.random()*80});
-spikes.forEach(o=>o.x-=speed);blocks.forEach(b=>b.x-=speed);platforms.forEach(p=>p.x-=speed);coins.forEach(c=>c.x-=speed);
-spikes=spikes.filter(o=>o.x+34>0);blocks=blocks.filter(b=>b.x+b.w>0);platforms=platforms.filter(p=>p.x+p.w>0);coins=coins.filter(c=>c.x>0);
-for(const b of blocks){if(player.x+player.w-5>b.x&&player.x+5<b.x+b.w&&player.y+player.h>FLOOR-b.h+5){finish();break}}
-for(const o of spikes){if(player.x+player.w-5>o.x+7&&player.x+5<o.x+27&&player.y+player.h>FLOOR-o.h+9){finish();break}}
-coins=coins.filter(c=>{let hit=Math.abs((player.x+17)-c.x)<24&&Math.abs((player.y+17)-c.y)<24;if(hit){score+=5;beep(900,.08)}return !hit});$('score').textContent=Math.floor(score)}
-function loop(){try{update();draw()}catch(e){active=false;$('title').textContent='SPIELFEHLER';$('message').textContent='Bitte Seite neu laden.';$('cover').style.display='grid'}requestAnimationFrame(loop)}
-const startGame=e=>{if(e)e.preventDefault();start()};
-$('fullscreen').addEventListener('click',async()=>{try{if(!document.fullscreenElement){if($('stage').requestFullscreen)await $('stage').requestFullscreen();else if($('stage').webkitRequestFullscreen)$('stage').webkitRequestFullscreen();}else{if(document.exitFullscreen)await document.exitFullscreen();else if(document.webkitExitFullscreen)document.webkitExitFullscreen();}}catch(e){$('fullscreen').textContent='Vollbild nicht verfügbar';}});
-document.addEventListener('fullscreenchange',()=>{$('fullscreen').textContent=document.fullscreenElement?'⤢ FENSTER':'⛶ VOLLBILD'});
-$('start').addEventListener('click',startGame);
-$('start').addEventListener('pointerup',startGame);
-$('start').addEventListener('touchend',startGame,{passive:false});
-$('cover').addEventListener('click',e=>{if(e.target===$('cover')||e.target.closest('#start'))startGame(e)});
-$('sound').addEventListener('click',()=>{sound=!sound;$('sound').textContent=sound?'🔊 SOUND':'🔇 SOUND';if(sound)beep()});
-canvas.addEventListener('pointerdown',jump);window.addEventListener('keydown',e=>{if(['Space','ArrowUp','KeyW'].includes(e.code)){e.preventDefault();if(over)start();else jump()}});
-reset();loop();
+const canvas=document.getElementById('game'),ctx=canvas.getContext('2d'),$=id=>document.getElementById(id),W=960,H=480;
+let running=false,dead=false,frame=0,score=0,best=0,camera=0,keys={},player,platforms=[],stars=[],hazards=[],audio;
+try{best=Number(localStorage.getItem('parkour-best')||0)}catch(e){}$('best').textContent=best;
+function tone(f=500){try{audio=audio||new(window.AudioContext||window.webkitAudioContext)();let o=audio.createOscillator(),g=audio.createGain();o.frequency.value=f;g.gain.value=.04;g.gain.exponentialRampToValueAtTime(.001,audio.currentTime+.12);o.connect(g);g.connect(audio.destination);o.start();o.stop(audio.currentTime+.12)}catch(e){}}
+function reset(){frame=0;score=0;camera=0;player={x:130,y:330,w:30,h:42,vx:0,vy:0,onGround:false};platforms=[{x:0,y:390,w:520},{x:590,y:350,w:250},{x:900,y:310,w:260},{x:1220,y:370,w:300},{x:1580,y:330,w:300}];stars=[];hazards=[];$('score').textContent=0}
+function start(){reset();running=true;dead=false;$('cover').style.display='none'}
+function end(){running=false;dead=true;best=Math.max(best,Math.floor(score));try{localStorage.setItem('parkour-best',best)}catch(e){}$('best').textContent=best;$('title').textContent='ABGESTÜRZT!';$('message').textContent='Du hast '+Math.floor(score)+' Punkte geschafft. Noch ein Versuch?';$('start').textContent='NOCHMAL SPIELEN';$('cover').style.display='grid';tone(120)}
+function jump(){if(!running){if(!dead)start();return}if(player.onGround){player.vy=-13.5;player.onGround=false;tone(650)}}
+function hold(id,code){const b=$(id);b.addEventListener('pointerdown',e=>{e.preventDefault();keys[code]=true});['pointerup','pointerleave','pointercancel'].forEach(ev=>b.addEventListener(ev,e=>{e.preventDefault();keys[code]=false}))}
+hold('left','left');hold('right','right');$('jump').addEventListener('pointerdown',e=>{e.preventDefault();jump()});
+function draw(){ctx.clearRect(0,0,W,H);let sky=ctx.createLinearGradient(0,0,0,H);sky.addColorStop(0,'#182657');sky.addColorStop(1,'#101326');ctx.fillStyle=sky;ctx.fillRect(0,0,W,H);
+for(let i=0;i<12;i++){let x=((i*110-camera*.25)%1200+1200)%1200;let bh=80+(i*37%130);ctx.fillStyle='#202e59';ctx.fillRect(x,H-bh-40,65,bh+40);ctx.fillStyle='#3c4d80';for(let y=H-bh-25;y<H-55;y+=24)ctx.fillRect(x+12,y,8,9)}
+ctx.fillStyle='#55f2ff';ctx.font='bold 14px Arial';ctx.fillText('NEON CITY  •  PARKOUR RUN',22,28);
+platforms.forEach(p=>{let x=p.x-camera;if(x+p.w<0||x>W)return;ctx.fillStyle='#293967';ctx.fillRect(x,p.y,p.w,H-p.y);ctx.fillStyle='#5cf5ff';ctx.fillRect(x,p.y,p.w,5);ctx.fillStyle='#40558c';for(let bx=x+18;bx<x+p.w-10;bx+=45)ctx.fillRect(bx,p.y+22,22,5)});
+hazards.forEach(h=>{let x=h.x-camera;ctx.fillStyle='#ff4f9a';ctx.beginPath();ctx.moveTo(x,h.y);ctx.lineTo(x+17,h.y-28);ctx.lineTo(x+34,h.y);ctx.fill()});
+stars.forEach(s=>{let x=s.x-camera;ctx.fillStyle='#ffe66d';ctx.beginPath();ctx.arc(x,s.y,9,0,Math.PI*2);ctx.fill()});
+if(player){let x=player.x-camera;ctx.save();ctx.translate(x+15,player.y+21);ctx.rotate(player.onGround?Math.sin(frame*.2)*.08:Math.min(.5,Math.max(-.5,player.vy*.035)));ctx.shadowBlur=18;ctx.shadowColor='#55edff';ctx.fillStyle='#55edff';ctx.fillRect(-14,-20,28,38);ctx.shadowBlur=0;ctx.strokeStyle='white';ctx.lineWidth=3;ctx.strokeRect(-10,-16,20,30);ctx.fillStyle='#121b3a';ctx.fillRect(1,-9,4,4);ctx.restore()}
+ctx.fillStyle='#ffffff44';ctx.fillRect(22,44,200,6);ctx.fillStyle='#ff65d4';ctx.fillRect(22,44,Math.min(200,(score%100)*2),6)}
+function update(){if(!running)return;frame++;let dir=(keys.right||keys.KeyD||keys.ArrowRight?1:0)-(keys.left||keys.KeyA||keys.ArrowLeft?1:0);player.vx=dir*4.6;player.x+=player.vx;player.x=Math.max(camera+40,Math.min(camera+W-170,player.x));let oldBottom=player.y+player.h;player.vy+=.62;player.y+=player.vy;player.onGround=false;
+for(const p of platforms){if(player.vy>=0&&oldBottom<=p.y+3&&player.y+player.h>=p.y&&player.x+player.w>p.x&&player.x<p.x+p.w){player.y=p.y-player.h;player.vy=0;player.onGround=true}}
+if(player.y>H+80){end();return}
+camera=Math.max(0,player.x-250);if(player.x>platforms[platforms.length-1].x-300){let last=platforms[platforms.length-1],gap=100+Math.random()*80,w=180+Math.random()*170,y=300+Math.random()*90;platforms.push({x:last.x+last.w+gap,y,w});if(Math.random()<.8)stars.push({x:last.x+last.w+gap/2+30,y:y-55-Math.random()*35});if(Math.random()<.55)hazards.push({x:last.x+last.w+gap+w*.55,y:y})}
+platforms=platforms.filter(p=>p.x+p.w>camera-100);stars=stars.filter(s=>{if(Math.abs(player.x+15-s.x)<23&&Math.abs(player.y+18-s.y)<30){score+=10;tone(900);return false}return s.x>camera-40});hazards=hazards.filter(h=>h.x>camera-40);
+for(const h of hazards){if(player.x+player.w>h.x+4&&player.x<h.x+30&&player.y+player.h>h.y-25&&player.y+player.h<h.y+18){end();return}}
+score+=.035;$('score').textContent=Math.floor(score)}
+function loop(){update();draw();requestAnimationFrame(loop)}
+$('start').addEventListener('click',start);$('full').addEventListener('click',async()=>{try{if(!document.fullscreenElement)await $('stage').requestFullscreen();else await document.exitFullscreen()}catch(e){}});
+document.addEventListener('keydown',e=>{if(['Space','ArrowUp','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault();keys[e.code]=true;if(e.code==='Space'||e.code==='ArrowUp'||e.code==='KeyW'){if(!running&&dead)start();else jump()}});
+document.addEventListener('keyup',e=>keys[e.code]=false);$('stage').addEventListener('pointerdown',e=>{if(e.target===$('game'))jump()});reset();loop();
 })();
 </script></body></html>
