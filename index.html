@@ -36,6 +36,8 @@ for(let i=0;i<18;i++){let x=(i*59-(frame*speed*.35)%59);rect(x,ground+22,28,3,'#
 if(player){ctx.save();ctx.translate(player.x+17,player.y+17);ctx.rotate(player.rot);ctx.shadowBlur=18;ctx.shadowColor='#54f5ff';rect(-17,-17,34,34,'#55edff');rect(-9,-9,18,18,'#fff');ctx.restore()}
 obstacles.forEach(o=>{ctx.fillStyle='#ff4d9d';ctx.shadowBlur=15;ctx.shadowColor='#ff258d';ctx.beginPath();ctx.moveTo(o.x,o.y+o.h);ctx.lineTo(o.x+o.w/2,o.y);ctx.lineTo(o.x+o.w,o.y+o.h);ctx.closePath();ctx.fill();ctx.shadowBlur=0});
 stars.forEach(s=>{ctx.save();ctx.translate(s.x,s.y);ctx.rotate(frame*.04);ctx.fillStyle='#ffe66d';ctx.shadowBlur=14;ctx.shadowColor='#ffe66d';ctx.beginPath();for(let i=0;i<10;i++){let r=i%2?5:11,a=i*Math.PI/5-Math.PI/2;ctx.lineTo(Math.cos(a)*r,Math.sin(a)*r)}ctx.closePath();ctx.fill();ctx.restore()});
+// Spieler zuletzt zeichnen, damit der Würfel immer sichtbar bleibt
+if(player){ctx.save();ctx.shadowBlur=24;ctx.shadowColor='#00ffff';ctx.fillStyle='#55edff';ctx.fillRect(player.x,player.y,player.w,player.h);ctx.shadowBlur=0;ctx.strokeStyle='#ffffff';ctx.lineWidth=3;ctx.strokeRect(player.x+4,player.y+4,player.w-8,player.h-8);ctx.restore()}
 }
 function update(){if(!running)return;frame++;score+=.12;speed+=.0008;scoreEl.textContent=Math.floor(score);
 player.vy+=.62;player.y+=player.vy;if(player.y+player.h>=ground){player.y=ground-player.h;player.vy=0;player.onGround=true;player.rot=Math.round(player.rot/(Math.PI/2))*(Math.PI/2)}else{player.onGround=false;player.rot+=.13}
