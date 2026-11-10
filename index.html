@@ -11,7 +11,7 @@
 </head>
 <body>
 <main class="wrap">
-<header><h1>NEON <span>DASH</span></h1><div class="pill">CUBE RUNNER · LEVEL 01</div></header>
+<header><h1>NEON <span>DASH</span></h1><div class="pill">CUBE RUNNER · LEVEL <span id="level">1</span> · <button id="sound" style="background:none;border:0;color:#fff;font:inherit;cursor:pointer">🔊 SOUND</button></div></header>
 <div id="game">
 <canvas id="c" width="900" height="420" aria-label="Neon Dash Spiel"></canvas>
 <div class="hud"><div>⭐ <span id="score">0</span></div><div>BEST: <span id="best">0</span></div></div>
@@ -22,12 +22,12 @@
 <script>
 (()=>{
 const canvas=document.getElementById('c'),ctx=canvas.getContext('2d'),overlay=document.getElementById('overlay'),startBtn=document.getElementById('start'),scoreEl=document.getElementById('score'),bestEl=document.getElementById('best');
-const W=900,H=420,ground=340;let running=false,dead=false,frame=0,score=0,speed=5.2,player,obstacles,stars,best=Number(localStorage.getItem('neonDashBest')||0);
+const W=900,H=420,ground=340;let running=false,dead=false,frame=0,score=0,speed=5.2,player,obstacles,stars,platforms,best=Number(localStorage.getItem('neonDashBest')||0),level=1,soundOn=true,audio=null;
 bestEl.textContent=best;
 function reset(){frame=0;score=0;speed=5.2;player={x:115,y:ground-34,w:34,h:34,vy:0,rot:0,onGround:true};obstacles=[];stars=[];scoreEl.textContent='0';}
-function jump(){if(!running){if(dead)return;begin();return}if(player.onGround){player.vy=-13.2;player.onGround=false}}
+function jump(){if(!running){if(dead)return;begin();return}if(player.onGround){player.vy=-13.2;player.onGround=false;tone(420,.09,'square')}}
 function begin(){reset();running=true;dead=false;overlay.style.display='none';}
-function end(){running=false;dead=true;best=Math.max(best,Math.floor(score));localStorage.setItem('neonDashBest',best);bestEl.textContent=best;document.getElementById('headline').textContent='CRASH!';document.getElementById('message').innerHTML='Punkte: <b>'+Math.floor(score)+'</b><br>Noch ein Versuch?';startBtn.textContent='NOCHMAL SPIELEN';overlay.style.display='grid';}
+function end(){running=false;dead=true;tone(110,.35,'sawtooth',.07);best=Math.max(best,Math.floor(score));localStorage.setItem('neonDashBest',best);bestEl.textContent=best;document.getElementById('headline').textContent='CRASH!';document.getElementById('message').innerHTML='Punkte: <b>'+Math.floor(score)+'</b><br>Noch ein Versuch?';startBtn.textContent='NOCHMAL SPIELEN';overlay.style.display='grid';}
 function rect(x,y,w,h,color){ctx.fillStyle=color;ctx.fillRect(x,y,w,h)}
 function draw(){ctx.clearRect(0,0,W,H);let grad=ctx.createLinearGradient(0,0,0,H);grad.addColorStop(0,'#171c45');grad.addColorStop(1,'#10152d');rect(0,0,W,H,grad);
 ctx.strokeStyle='#343e78';ctx.lineWidth=1;for(let x=0;x<W;x+=45){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke()}for(let y=20;y<ground;y+=45){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
@@ -35,7 +35,7 @@ ctx.fillStyle='#202a58';ctx.fillRect(0,ground,W,H-ground);ctx.strokeStyle='#4ef5
 for(let i=0;i<18;i++){let x=(i*59-(frame*speed*.35)%59);rect(x,ground+22,28,3,'#394a88')}
 if(player){ctx.save();ctx.translate(player.x+17,player.y+17);ctx.rotate(player.rot);ctx.shadowBlur=18;ctx.shadowColor='#54f5ff';rect(-17,-17,34,34,'#55edff');rect(-9,-9,18,18,'#fff');ctx.restore()}
 obstacles.forEach(o=>{ctx.fillStyle='#ff4d9d';ctx.shadowBlur=15;ctx.shadowColor='#ff258d';ctx.beginPath();ctx.moveTo(o.x,o.y+o.h);ctx.lineTo(o.x+o.w/2,o.y);ctx.lineTo(o.x+o.w,o.y+o.h);ctx.closePath();ctx.fill();ctx.shadowBlur=0});
-stars.forEach(s=>{ctx.save();ctx.translate(s.x,s.y);ctx.rotate(frame*.04);ctx.fillStyle='#ffe66d';ctx.shadowBlur=14;ctx.shadowColor='#ffe66d';ctx.beginPath();for(let i=0;i<10;i++){let r=i%2?5:11,a=i*Math.PI/5-Math.PI/2;ctx.lineTo(Math.cos(a)*r,Math.sin(a)*r)}ctx.closePath();ctx.fill();ctx.restore()});
+platforms.forEach(p=>{ctx.fillStyle='#a45bff';ctx.shadowBlur=12;ctx.shadowColor='#a45bff';ctx.fillRect(p.x,p.y,p.w,p.h);ctx.shadowBlur=0;ctx.fillStyle='#e5c8ff';ctx.fillRect(p.x,p.y,p.w,4)});\nstars.forEach(s=>{ctx.save();ctx.translate(s.x,s.y);ctx.rotate(frame*.04);ctx.fillStyle='#ffe66d';ctx.shadowBlur=14;ctx.shadowColor='#ffe66d';ctx.beginPath();for(let i=0;i<10;i++){let r=i%2?5:11,a=i*Math.PI/5-Math.PI/2;ctx.lineTo(Math.cos(a)*r,Math.sin(a)*r)}ctx.closePath();ctx.fill();ctx.restore()});
 // Spieler zuletzt zeichnen, damit der Würfel immer sichtbar bleibt
 if(player){ctx.save();ctx.shadowBlur=24;ctx.shadowColor='#00ffff';ctx.fillStyle='#55edff';ctx.fillRect(player.x,player.y,player.w,player.h);ctx.shadowBlur=0;ctx.strokeStyle='#ffffff';ctx.lineWidth=3;ctx.strokeRect(player.x+4,player.y+4,player.w-8,player.h-8);ctx.restore()}
 }
@@ -46,11 +46,11 @@ if(frame%115===0)stars.push({x:W+10,y:ground-90-Math.random()*55,r:11});
 obstacles.forEach(o=>o.x-=speed);stars.forEach(s=>s.x-=speed);
 obstacles=obstacles.filter(o=>o.x+o.w>0);stars=stars.filter(s=>s.x>-20);
 for(const o of obstacles){if(player.x+player.w-7>o.x+7&&player.x+7<o.x+o.w-7&&player.y+player.h-5>o.y+8){end();break}}
-stars=stars.filter(s=>{let hit=player.x<s.x+13&&player.x+player.w>s.x-13&&player.y<s.y+13&&player.y+player.h>s.y-13;if(hit)score+=5;return !hit});
+stars=stars.filter(s=>{let hit=player.x<s.x+13&&player.x+player.w>s.x-13&&player.y<s.y+13&&player.y+player.h>s.y-13;if(hit){score+=5;tone(880,.12,'sine')}return !hit});
 }
 function loop(){update();draw();requestAnimationFrame(loop)}
 reset();
-startBtn.addEventListener('click',begin);canvas.addEventListener('pointerdown',jump);window.addEventListener('keydown',e=>{if(['Space','ArrowUp','KeyW'].includes(e.code)){e.preventDefault();if(!running&&dead)begin();else jump()}});loop();
+startBtn.addEventListener('click',begin);document.getElementById('sound').addEventListener('click',e=>{soundOn=!soundOn;e.currentTarget.textContent=soundOn?'🔊 SOUND':'🔇 SOUND';if(soundOn)tone(600,.1)});canvas.addEventListener('pointerdown',jump);window.addEventListener('keydown',e=>{if(['Space','ArrowUp','KeyW'].includes(e.code)){e.preventDefault();if(!running&&dead)begin();else jump()}});loop();
 })();
 </script>
 </body>
