@@ -1,63 +1,41 @@
-<!DOCTYPE html>
-<html lang="de">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#10142d">
-<title>Neon Dash – Cube Runner</title>
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Neon Dash</title>
 <style>
-:root{color-scheme:dark}*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 50% 0,#25265a 0,#10142d 55%,#080b1c 100%);color:#fff;font-family:system-ui,Arial,sans-serif;display:grid;place-items:center;padding:18px}.wrap{width:min(960px,100%)}header{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}h1{margin:0;font-size:clamp(24px,5vw,42px);letter-spacing:2px;text-shadow:0 0 18px #35eaff}h1 span{color:#ff4edb}.pill{background:#1b2146;border:1px solid #414a88;border-radius:99px;padding:8px 13px;color:#cbd5ff;font-size:13px}#game{position:relative;border:2px solid #4853a1;border-radius:18px;overflow:hidden;box-shadow:0 0 35px #252b78;background:#111632}canvas{display:block;width:100%;height:auto;touch-action:manipulation}.hud{position:absolute;top:14px;left:16px;right:16px;display:flex;justify-content:space-between;pointer-events:none;font-weight:800;text-shadow:0 2px 5px #000}.overlay{position:absolute;inset:0;display:grid;place-items:center;background:#090d24b8;text-align:center;padding:20px}.panel{max-width:420px}.panel h2{font-size:clamp(27px,6vw,46px);margin:0 0 8px;color:#55f5ff;text-shadow:0 0 18px #13bde9}.panel p{color:#d8ddff;line-height:1.5}.btn{border:0;border-radius:12px;padding:13px 24px;font-weight:900;font-size:16px;color:#10142d;background:linear-gradient(100deg,#54f5ff,#ff5bd6);cursor:pointer;box-shadow:0 5px 0 #7543a8}.btn:active{transform:translateY(3px);box-shadow:0 2px 0 #7543a8}.hint{text-align:center;color:#aeb8e8;font-size:13px;margin:13px 0 0}.mobile{display:none}@media(max-width:600px){header{align-items:flex-start;flex-direction:column}.mobile{display:inline}}
-</style>
-</head>
-<body>
-<main class="wrap">
-<header><h1>NEON <span>DASH</span></h1><div class="pill">CUBE RUNNER · LEVEL <span id="level">1</span> · <button id="sound" style="background:none;border:0;color:#fff;font:inherit;cursor:pointer">🔊 SOUND</button></div></header>
-<div id="game">
-<canvas id="c" width="900" height="420" aria-label="Neon Dash Spiel"></canvas>
-<div class="hud"><div>⭐ <span id="score">0</span></div><div>BEST: <span id="best">0</span></div></div>
-<div class="overlay" id="overlay"><div class="panel"><h2 id="headline">READY?</h2><p id="message">Springe über die Hindernisse und sammle Sterne!<br>Leertaste, ↑ oder Tippen zum Springen.</p><button class="btn" id="start">SPIEL STARTEN</button></div></div>
-</div>
-<p class="hint">Tastatur: LEERTASTE / PFEIL HOCH · Handy: Tippen zum Springen <span class="mobile">·</span></p>
-</main>
+*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;background:#0b1028;color:white;font-family:Arial,sans-serif;padding:12px}.wrap{width:min(900px,100%)}header{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}h1{color:#5cf5ff;text-shadow:0 0 15px #00dfff}.stats{display:flex;gap:14px;align-items:center}button{border:0;border-radius:10px;padding:12px 18px;font-weight:bold;background:linear-gradient(90deg,#5cf5ff,#ff62d6);cursor:pointer}#sound{padding:8px 12px}#stage{position:relative;border:2px solid #5966bd;border-radius:14px;overflow:hidden}canvas{display:block;width:100%;height:auto;touch-action:manipulation}.cover{position:absolute;inset:0;display:grid;place-items:center;text-align:center;background:#080d25cc;padding:20px}.cover h2{font-size:clamp(28px,6vw,48px);color:#5cf5ff;margin:0 0 8px}.cover p{line-height:1.5}.hint{text-align:center;color:#b8c5ff;font-size:14px}
+</style></head><body><main class="wrap"><header><h1>NEON DASH</h1><div class="stats"><span>⭐ <b id="score">0</b></span><span>BEST <b id="best">0</b></span><span>LEVEL <b id="level">1</b></span><button id="sound">🔊 SOUND</button></div></header>
+<div id="stage"><canvas id="game" width="900" height="420"></canvas><div class="cover" id="cover"><div><h2 id="title">READY?</h2><p id="message">Springe über die pinken Spikes und lande auf Plattformen.<br>Leertaste, Pfeil hoch oder auf den Bildschirm tippen.</p><button id="start">SPIEL STARTEN</button></div></div></div><p class="hint">Springen: LEERTASTE / ↑ / W oder Bildschirm antippen</p></main>
 <script>
-(()=>{
-const canvas=document.getElementById('c'),ctx=canvas.getContext('2d'),overlay=document.getElementById('overlay'),startBtn=document.getElementById('start'),scoreEl=document.getElementById('score'),bestEl=document.getElementById('best');
-const W=900,H=420,ground=340;let running=false,dead=false,frame=0,score=0,speed=5.2,player,obstacles,stars,platforms,best=Number(localStorage.getItem('neonDashBest')||0),level=1,soundOn=true,audio=null;
-bestEl.textContent=best;
-function tone(freq,duration,type='sine',volume=.04){if(!soundOn)return;try{audio=audio||new(window.AudioContext||window.webkitAudioContext)();if(audio.state==='suspended')audio.resume();const o=audio.createOscillator(),g=audio.createGain();o.type=type;o.frequency.value=freq;g.gain.setValueAtTime(volume,audio.currentTime);g.gain.exponentialRampToValueAtTime(.001,audio.currentTime+duration);o.connect(g);g.connect(audio.destination);o.start();o.stop(audio.currentTime+duration)}catch(e){}}
-function reset(){frame=0;score=0;speed=5.2;level=1;player={x:115,y:ground-34,w:34,h:34,vy:0,rot:0,onGround:true};obstacles=[];stars=[];platforms=[];scoreEl.textContent='0';document.getElementById('level').textContent='1';}
-function jump(){if(!running){if(dead)return;begin();return}if(player.onGround){player.vy=-13.2;player.onGround=false;tone(420,.09,'square')}}
-function begin(){reset();running=true;dead=false;overlay.style.display='none';}
-function end(){running=false;dead=true;tone(120,.3,'sawtooth');tone(110,.35,'sawtooth',.07);best=Math.max(best,Math.floor(score));localStorage.setItem('neonDashBest',best);bestEl.textContent=best;document.getElementById('headline').textContent='CRASH!';document.getElementById('message').innerHTML='Punkte: <b>'+Math.floor(score)+'</b><br>Noch ein Versuch?';startBtn.textContent='NOCHMAL SPIELEN';overlay.style.display='grid';}
-function rect(x,y,w,h,color){ctx.fillStyle=color;ctx.fillRect(x,y,w,h)}
-function draw(){ctx.clearRect(0,0,W,H);let grad=ctx.createLinearGradient(0,0,0,H);grad.addColorStop(0,'#171c45');grad.addColorStop(1,'#10152d');rect(0,0,W,H,grad);
-ctx.strokeStyle='#343e78';ctx.lineWidth=1;for(let x=0;x<W;x+=45){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke()}for(let y=20;y<ground;y+=45){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
-ctx.fillStyle='#202a58';ctx.fillRect(0,ground,W,H-ground);ctx.strokeStyle='#4ef5ff';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(0,ground);ctx.lineTo(W,ground);ctx.stroke();
-for(let i=0;i<18;i++){let x=(i*59-(frame*speed*.35)%59);rect(x,ground+22,28,3,'#394a88')}
-if(player){ctx.save();ctx.translate(player.x+17,player.y+17);ctx.rotate(player.rot);ctx.shadowBlur=18;ctx.shadowColor='#54f5ff';rect(-17,-17,34,34,'#55edff');rect(-9,-9,18,18,'#fff');ctx.restore()}
-obstacles.forEach(o=>{ctx.fillStyle='#ff4d9d';ctx.shadowBlur=15;ctx.shadowColor='#ff258d';ctx.beginPath();ctx.moveTo(o.x,o.y+o.h);ctx.lineTo(o.x+o.w/2,o.y);ctx.lineTo(o.x+o.w,o.y+o.h);ctx.closePath();ctx.fill();ctx.shadowBlur=0});
-platforms.forEach(p=>{ctx.fillStyle='#a45bff';ctx.shadowBlur=12;ctx.shadowColor='#a45bff';ctx.fillRect(p.x,p.y,p.w,p.h);ctx.shadowBlur=0;ctx.fillStyle='#e5c8ff';ctx.fillRect(p.x,p.y,p.w,4)});\nstars.forEach(s=>{ctx.save();ctx.translate(s.x,s.y);ctx.rotate(frame*.04);ctx.fillStyle='#ffe66d';ctx.shadowBlur=14;ctx.shadowColor='#ffe66d';ctx.beginPath();for(let i=0;i<10;i++){let r=i%2?5:11,a=i*Math.PI/5-Math.PI/2;ctx.lineTo(Math.cos(a)*r,Math.sin(a)*r)}ctx.closePath();ctx.fill();ctx.restore()});
-// Spieler zuletzt zeichnen, damit der Würfel immer sichtbar bleibt
-if(player){ctx.save();ctx.shadowBlur=24;ctx.shadowColor='#00ffff';ctx.fillStyle='#55edff';ctx.fillRect(player.x,player.y,player.w,player.h);ctx.shadowBlur=0;ctx.strokeStyle='#ffffff';ctx.lineWidth=3;ctx.strokeRect(player.x+4,player.y+4,player.w-8,player.h-8);ctx.restore()}
-}
-function update(){if(!running)return;frame++;score+=.12;speed+=.0008;scoreEl.textContent=Math.floor(score);
-const nextLevel=1+Math.floor(score/250);if(nextLevel!==level){level=nextLevel;document.getElementById('level').textContent=level;tone(760,.18,'triangle')}
-const oldBottom=player.y+player.h;player.vy+=.62;player.y+=player.vy;player.onGround=false;
-for(const p of platforms){if(player.vy>=0&&oldBottom<=p.y&&player.y+player.h>=p.y&&player.x+player.w>p.x&&player.x<p.x+p.w){player.y=p.y-player.h;player.vy=0;player.onGround=true}}
-if(player.y+player.h>=ground){player.y=ground-player.h;player.vy=0;player.onGround=true}
-if(player.onGround)player.rot=Math.round(player.rot/(Math.PI/2))*(Math.PI/2);else player.rot+=.13;
-if(frame%Math.max(42,Math.floor(88-(speed-5)*4))===0){const count=1+(Math.random()<.5?1:0)+(level>=3&&Math.random()<.25?1:0);for(let i=0;i<count;i++){const h=32+Math.random()*22;obstacles.push({x:W+20+i*32,y:ground-h,w:34,h})}}
-if(frame%170===0)platforms.push({x:W+20,y:ground-105-Math.random()*35,w:150,h:13});
-if(frame%105===0)stars.push({x:W+10,y:ground-90-Math.random()*65,r:11});
-obstacles.forEach(o=>o.x-=speed);stars.forEach(t=>t.x-=speed);platforms.forEach(p=>p.x-=speed);
-obstacles=obstacles.filter(o=>o.x+o.w>0);stars=stars.filter(t=>t.x>-20);platforms=platforms.filter(p=>p.x+p.w>0);
-for(const o of obstacles){if(player.x+player.w-7>o.x+7&&player.x+7<o.x+o.w-7&&player.y+player.h-5>o.y+8){end();break}}
-stars=stars.filter(t=>{const hit=player.x<t.x+13&&player.x+player.w>t.x-13&&player.y<t.y+13&&player.y+player.h>t.y-13;if(hit){score+=5;tone(880,.12)}return !hit});
-}
-function loop(){update();draw();requestAnimationFrame(loop)}
-reset();
-startBtn.addEventListener('click',begin);document.getElementById('sound').addEventListener('click',e=>{soundOn=!soundOn;e.currentTarget.textContent=soundOn?'🔊 SOUND':'🔇 SOUND';if(soundOn)tone(600,.1)});canvas.addEventListener('pointerdown',jump);window.addEventListener('keydown',e=>{if(['Space','ArrowUp','KeyW'].includes(e.code)){e.preventDefault();if(!running&&dead)begin();else jump()}});loop();
+(()=>{'use strict';
+const canvas=document.getElementById('game'),ctx=canvas.getContext('2d');
+const $=id=>document.getElementById(id),W=900,H=420,FLOOR=350;
+let active=false,over=false,tick=0,score=0,best=0,level=1,speed=5,player,spikes=[],platforms=[],coins=[],sound=true,audio;
+try{best=Number(localStorage.getItem('nd-best')||0)}catch(e){} $('best').textContent=best;
+function beep(f=500,d=.1,w='sine'){if(!sound)return;try{audio=audio||new(window.AudioContext||window.webkitAudioContext)();if(audio.state==='suspended')audio.resume();let o=audio.createOscillator(),g=audio.createGain();o.type=w;o.frequency.value=f;g.gain.setValueAtTime(.05,audio.currentTime);g.gain.exponentialRampToValueAtTime(.001,audio.currentTime+d);o.connect(g);g.connect(audio.destination);o.start();o.stop(audio.currentTime+d)}catch(e){}}
+function reset(){tick=0;score=0;level=1;speed=5;player={x:120,y:FLOOR-34,w:34,h:34,vy:0,grounded:true};spikes=[];platforms=[];coins=[];$('score').textContent='0';$('level').textContent='1'}
+function start(){reset();active=true;over=false;$('cover').style.display='none'}
+function jump(){if(!active){if(!over)start();return}if(player.grounded){player.vy=-13;player.grounded=false;beep(420,.08,'square')}}
+function finish(){active=false;over=true;beep(130,.25,'sawtooth');best=Math.max(best,Math.floor(score));try{localStorage.setItem('nd-best',best)}catch(e){}$('best').textContent=best;$('title').textContent='CRASH!';$('message').textContent='Punkte: '+Math.floor(score)+' – versuch es nochmal!';$('start').textContent='NOCHMAL SPIELEN';$('cover').style.display='grid'}
+function draw(){ctx.clearRect(0,0,W,H);let g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#1a2252');g.addColorStop(1,'#10152e');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+ctx.strokeStyle='#303b70';ctx.lineWidth=1;for(let x=0;x<W;x+=45){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke()}
+ctx.fillStyle='#25315d';ctx.fillRect(0,FLOOR,W,H-FLOOR);ctx.fillStyle='#55f5ff';ctx.fillRect(0,FLOOR,W,3);
+platforms.forEach(p=>{ctx.fillStyle='#a45bff';ctx.fillRect(p.x,p.y,p.w,12);ctx.fillStyle='#e5c8ff';ctx.fillRect(p.x,p.y,p.w,3)});
+spikes.forEach(o=>{ctx.fillStyle='#ff4d9d';ctx.beginPath();ctx.moveTo(o.x,FLOOR);ctx.lineTo(o.x+17,FLOOR-o.h);ctx.lineTo(o.x+34,FLOOR);ctx.fill()});
+coins.forEach(c=>{ctx.fillStyle='#ffe66d';ctx.beginPath();ctx.arc(c.x,c.y,9,0,Math.PI*2);ctx.fill()});
+if(player){ctx.save();ctx.shadowBlur=22;ctx.shadowColor='#00eaff';ctx.fillStyle='#55edff';ctx.fillRect(player.x,player.y,player.w,player.h);ctx.shadowBlur=0;ctx.strokeStyle='white';ctx.lineWidth=3;ctx.strokeRect(player.x+4,player.y+4,player.w-8,player.h-8);ctx.restore()}}
+function update(){if(!active)return;tick++;score+=.12;speed+=.0005;let nl=1+Math.floor(score/200);if(nl!==level){level=nl;$('level').textContent=level;beep(800,.16)}
+let prev=player.y+player.h;player.vy+=.6;player.y+=player.vy;player.grounded=false;
+for(const p of platforms){if(player.vy>=0&&prev<=p.y&&player.y+player.h>=p.y&&player.x+player.w>p.x&&player.x<p.x+p.w){player.y=p.y-player.h;player.vy=0;player.grounded=true}}
+if(player.y+player.h>=FLOOR){player.y=FLOOR-player.h;player.vy=0;player.grounded=true}
+if(tick%75===0){let n=1+(Math.random()<.45?1:0)+(level>3&&Math.random()<.25?1:0);for(let i=0;i<n;i++)spikes.push({x:W+20+i*33,h:30+Math.random()*24})}
+if(tick%165===0)platforms.push({x:W+10,y:FLOOR-105-Math.random()*30,w:145});
+if(tick%100===0)coins.push({x:W+10,y:FLOOR-80-Math.random()*80});
+spikes.forEach(o=>o.x-=speed);platforms.forEach(p=>p.x-=speed);coins.forEach(c=>c.x-=speed);
+spikes=spikes.filter(o=>o.x+34>0);platforms=platforms.filter(p=>p.x+p.w>0);coins=coins.filter(c=>c.x>0);
+for(const o of spikes){if(player.x+player.w-5>o.x+7&&player.x+5<o.x+27&&player.y+player.h>FLOOR-o.h+9){finish();break}}
+coins=coins.filter(c=>{let hit=Math.abs((player.x+17)-c.x)<24&&Math.abs((player.y+17)-c.y)<24;if(hit){score+=5;beep(900,.08)}return !hit});$('score').textContent=Math.floor(score)}
+function loop(){try{update();draw()}catch(e){active=false;$('title').textContent='SPIELFEHLER';$('message').textContent='Bitte Seite neu laden.';$('cover').style.display='grid'}requestAnimationFrame(loop)}
+$('start').addEventListener('click',start);$('sound').addEventListener('click',()=>{sound=!sound;$('sound').textContent=sound?'🔊 SOUND':'🔇 SOUND';if(sound)beep()});
+canvas.addEventListener('pointerdown',jump);window.addEventListener('keydown',e=>{if(['Space','ArrowUp','KeyW'].includes(e.code)){e.preventDefault();if(over)start();else jump()}});
+reset();loop();
 })();
-</script>
-</body>
-</html>
+</script></body></html>
